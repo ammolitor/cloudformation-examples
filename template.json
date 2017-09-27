@@ -1,0 +1,2566 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "DC/OS Cluster",
+  "Mappings": {
+    "CENTOS7AMI": {
+      "ap-south-1": {
+        "AMI": "ami-95cda6fa"
+      },
+      "ap-northeast-2": {
+        "AMI": "ami-c74789a9"
+      },
+      "ap-southeast-1": {
+        "AMI": "ami-f068a193"
+      },
+      "ap-southeast-2": {
+        "AMI": "ami-fedafc9d"
+      },
+      "ap-northeast-1": {
+        "AMI": "ami-eec1c380"
+      },
+      "ca-central-1": {
+        "AMI": "ami-af62d0cb"
+      },
+      "eu-central-1": {
+        "AMI": "ami-9bf712f4"
+      },
+      "eu-west-1": {
+        "AMI": "ami-7abd0209"
+      },
+      "eu-west-2": {
+        "AMI": "ami-bb373ddf"
+      },
+      "sa-east-1": {
+        "AMI": "ami-26b93b4a"
+      },
+      "us-east-1": {
+        "AMI": "ami-6d1c2007"
+      },
+      "us-east-2": {
+        "AMI": "ami-6a2d760f"
+      },
+      "us-west-1": {
+        "AMI": "ami-af4333cf"
+      },
+      "us-west-2": {
+        "AMI": "ami-d2c924b2"
+      }
+    },
+    "DNSMAPPING": {
+      "ap-south-1": {
+        "NAME": "ap-south-1.compute.internal"
+      },
+      "ap-northeast-2": {
+        "NAME": "ap-northeast-2.compute.internal"
+      },
+      "ap-southeast-1": {
+        "NAME": "ap-southeast-1.compute.internal"
+      },
+      "ap-southeast-2": {
+        "NAME": "ap-southeast-2.compute.internal"
+      },
+      "ap-northeast-1": {
+        "NAME": "ap-northeast-1.compute.internal"
+      },
+      "ca-central-1": {
+        "NAME": "ca-central-1.compute.internal"
+      },
+      "eu-central-1": {
+        "NAME": "eu-central-1.compute.internal"
+      },
+      "eu-west-1": {
+        "NAME": "eu-west-1.compute.internal"
+      },
+      "eu-west-2": {
+        "NAME": "eu-west-2.compute.internal"
+      },
+      "sa-east-1": {
+        "NAME": "sa-east-1.compute.internal"
+      },
+      "us-east-1": {
+        "NAME": "ec2.internal"
+      },
+      "us-east-2": {
+        "NAME": "us-east-2.compute.internal"
+      },
+      "us-west-1": {
+        "NAME": "us-west-1.compute.internal"
+      },
+      "us-west-2": {
+        "NAME": "us-west-2.compute.internal"
+      }
+    },
+    "VARIABLES": {
+      "MASTER": {
+        "TYPE": "t2.micro",
+        "SPOTPRICE": "0.012",
+        "ROOTDISK": "10",
+        "COUNT": "3"
+      },
+      "PRIVATEAGENT": {
+        "TYPE": "t2.micro",
+        "SPOTPRICE": "0.012",
+        "ROOTDISK": "10",
+        "COUNT": "3"
+      },
+      "PUBLICAGENT": {
+        "TYPE": "t2.micro",
+        "SPOTPRICE": "0.012",
+        "ROOTDISK": "10",
+        "COUNT": "3"
+      },
+      "NETWORK": {
+        "VPC": "10.100.0.0/16",
+        "USEAST1VPC": "10.200.0.0/16",
+        "PRIVATESUBNETa": "10.100.32.0/20",
+        "PRIVATESUBNETb": "10.100.64.0/20",
+        "PRIVATESUBNETc": "10.100.96.0/20",
+        "PUBLICSUBNETa": "10.100.48.0/20",
+        "PUBLICSUBNETb": "10.100.80.0/20",
+        "PUBLICSUBNETc": "10.100.112.0/20",
+        "AZa": "us-east-1a",
+        "AZb": "us-east-1b",
+        "AZc": "us-east-1c"
+      },
+      "RDS": {
+        "DBNAME": "database01",
+        "USER": "db01admin",
+        "PASSWORD": "H4ugyFX2oL9%BYEmx8;Z",
+        "TYPE": "db.t2.medium",
+        "STORAGE": 20
+      },
+      "TIMEOUT": {
+        "INSTANCE": "PT90M",
+        "STACK": "PT90M"
+      },
+      "STACK": {
+        "ADMINLOCATION": "100.101.102.103/32",
+        "KEYNAME": "ssh-key",
+        "OAUTHENABLED": "false"
+      }
+    }
+  },
+  "Outputs": {
+    "PublicSlaveDnsAddress": {
+      "Description": "Public slaves",
+      "Value": {
+        "Fn::GetAtt": [
+          "elb01pub",
+          "DNSName"
+        ]
+      }
+    },
+    "bucket00ex": {
+      "Description": "Exhibitor S3 bucket name",
+      "Value": {
+        "Ref": "bucket00ex"
+      }
+    },
+    "DnsAddress": {
+      "Description": "Mesos Master",
+      "Value": {
+        "Fn::GetAtt": [
+          "elb00mas",
+          "DNSName"
+        ]
+      }
+    }
+  },
+  "Resources": {
+    "bucket00ex": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain"
+    },
+
+    "eip_a": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "eip_b": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "eip_c": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+
+    "vpc00": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ],
+        "EnableDnsHostnames": "true",
+        "EnableDnsSupport": "true",
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "VPC"
+          ]
+        }
+      }
+    },
+
+    "subnet0apri": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Private",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZa"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PRIVATESUBNETa"
+          ]
+        }
+      }
+    },
+    "subnet0bpri": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Private",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZb"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PRIVATESUBNETb"
+          ]
+        }
+      }
+    },
+    "subnet0cpri": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Private",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZc"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PRIVATESUBNETc"
+          ]
+        }
+      }
+    },
+
+    "subnet0apub": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZa"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PUBLICSUBNETa"
+          ]
+        }
+      }
+    },
+    "subnet0bpub": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZb"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PUBLICSUBNETb"
+          ]
+        }
+      }
+    },
+    "subnet0cpub": {
+      "Type": "AWS::EC2::Subnet",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ],
+        "AvailabilityZone": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "AZc"
+          ]
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "PUBLICSUBNETc"
+          ]
+        }
+      }
+    },
+
+    "nategateway0a": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "eip_a",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "subnet0apub"
+        }
+      }
+    },
+    "nategateway0b": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "eip_b",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "subnet0bpub"
+        }
+      }
+    },
+    "nategateway0c": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "eip_c",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "subnet0cpub"
+        }
+      }
+    },
+
+    "efs00": {
+      "Type": "AWS::EFS::FileSystem",
+      "Properties": {
+        "FileSystemTags": [
+          {
+            "Key": "Name",
+            "Value": "dcos-admin filesystem"
+          }
+        ],
+        "PerformanceMode": "generalPurpose"
+      }
+    },
+    "efsmt0a": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": {
+          "Ref": "efs00"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg00pri"
+          }
+        ],
+        "SubnetId": {
+          "Ref": "subnet0apri"
+        }
+      }
+    },
+    "efsmt0b": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": {
+          "Ref": "efs00"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg00pri"
+          }
+        ],
+        "SubnetId": {
+          "Ref": "subnet0bpri"
+        }
+      }
+    },
+    "efsmt0c": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": {
+          "Ref": "efs00"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg00pri"
+          }
+        ],
+        "SubnetId": {
+          "Ref": "subnet0cpri"
+        }
+      }
+    },
+
+    "role00mas": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:DeleteObject",
+                    "s3:GetBucketAcl",
+                    "s3:GetBucketPolicy",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "bucket00ex"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "bucket00ex"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:*"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "AWS::StackId"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "AWS::StackId"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeKeyPairs",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeInstances",
+                    "autoscaling:DescribeLaunchConfigurations",
+                    "autoscaling:UpdateAutoScalingGroup",
+                    "autoscaling:DescribeAutoScalingGroups",
+                    "autoscaling:DescribeScalingActivities",
+                    "elasticloadbalancing:DescribeLoadBalancers"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": "root"
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Effect": "Allow"
+            }
+          ]
+        }
+      }
+    },
+    "role01agt": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:*"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "AWS::StackId"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "AWS::StackId"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:CreateTags",
+                    "ec2:DescribeInstances",
+                    "ec2:CreateVolume",
+                    "ec2:DeleteVolume",
+                    "ec2:AttachVolume",
+                    "ec2:DetachVolume",
+                    "ec2:DescribeVolumes",
+                    "ec2:DescribeVolumeStatus",
+                    "ec2:DescribeVolumeAttribute",
+                    "ec2:CreateSnapshot",
+                    "ec2:CopySnapshot",
+                    "ec2:DeleteSnapshot",
+                    "ec2:DescribeSnapshots",
+                    "ec2:DescribeSnapshotAttribute",
+                    "ec2:DescribeAvailabilityZones",
+                    "ec2:DescribeInstances",
+                    "ec2:DescribeTags",
+                    "ec2:ModifySnapshotAttribute",
+                    "ec2:ModifyVolume",
+                    "ec2:ModifyVolumeAttribute",
+                    "autoscaling:DescribeAutoScalingGroups",
+                    "cloudwatch:PutMetricData",
+                    "route53:ChangeResourceRecordSets",
+                    "route53:ListResourceRecordSets",
+                    "route53:ListHostedZonesByName",
+                    "route53:GetChange",
+                    "route53:TestDNSAnswer",
+                    "ec2:CreateSecurityGroup",
+                    "ec2:DeleteSecurityGroup",
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "elasticloadbalancing:*",
+                    "ec2:DescribeSubnets",
+                    "acm:ListCertificates"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": "Slaves"
+          },
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "sts:AssumeRole",
+                  "Resource": "arn:aws:iam::435375411953:role/dev-qa-marketplace-access"
+                }
+              ]
+            },
+            "PolicyName": "marketplace"
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Effect": "Allow"
+            }
+          ]
+        }
+      }
+    },
+
+    "instanceprofile00mas": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "role00mas"
+          }
+        ]
+      }
+    },
+    "instanceprofile01agt": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "role01agt"
+          }
+        ]
+      }
+    },
+
+    "ig00": {
+      "Type": "AWS::EC2::InternetGateway",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "vpcgwa00": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "DependsOn": "ig00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "InternetGatewayId": {
+          "Ref": "ig00"
+        }
+      }
+    },
+
+    "dopt00": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ],
+        "DomainName": {
+          "Fn::FindInMap": [
+            "DNSMAPPING",
+            {
+              "Ref": "AWS::Region"
+            },
+            "NAME"
+          ]
+        }
+      }
+    },
+    "doptassoc00": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "DhcpOptionsId": {
+          "Ref": "dopt00"
+        }
+      }
+    },
+
+    "acl00pri": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "acl01pub": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+
+    "acle00priout": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "PortRange": {
+          "From": "0",
+          "To": "65535"
+        },
+        "RuleNumber": "100",
+        "RuleAction": "allow",
+        "NetworkAclId": {
+          "Ref": "acl00pri"
+        },
+        "Protocol": "-1",
+        "Egress": "true",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "acle00priin": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "PortRange": {
+          "From": "0",
+          "To": "65535"
+        },
+        "RuleNumber": "100",
+        "RuleAction": "allow",
+        "NetworkAclId": {
+          "Ref": "acl00pri"
+        },
+        "Protocol": "-1",
+        "Egress": "false",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+
+    "acle01pubout": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "PortRange": {
+          "From": "0",
+          "To": "65535"
+        },
+        "RuleNumber": "100",
+        "RuleAction": "allow",
+        "NetworkAclId": {
+          "Ref": "acl01pub"
+        },
+        "Protocol": "-1",
+        "Egress": "true",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+    "acle01pubin": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "PortRange": {
+          "From": "0",
+          "To": "65535"
+        },
+        "RuleNumber": "100",
+        "RuleAction": "allow",
+        "NetworkAclId": {
+          "Ref": "acl01pub"
+        },
+        "Protocol": "-1",
+        "Egress": "false",
+        "CidrBlock": "0.0.0.0/0"
+      }
+    },
+
+    "subnetacl0apri": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl00pri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0apri"
+        }
+      }
+    },
+    "subnetacl0bpri": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl00pri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0bpri"
+        }
+      }
+    },
+    "subnetacl0cpri": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl00pri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0cpri"
+        }
+      }
+    },
+
+    "subnetacl0apub": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl01pub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0apub"
+        }
+      }
+    },
+    "subnetacl0bpub": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl01pub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0bpub"
+        }
+      }
+    },
+    "subnetacl0cpub": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl01pub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0cpub"
+        }
+      }
+    },
+
+    "rtb0apri": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "rtb0bpri": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "rtb0cpri": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+
+    "rtb0apub": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "rtb0bpub": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "rtb0cpub": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc00",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+
+    "rtba0apri": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0apri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0apri"
+        }
+      }
+    },
+    "rtba0bpri": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0bpri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0bpri"
+        }
+      }
+    },
+    "rtba0cpri": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0cpri"
+        },
+        "SubnetId": {
+          "Ref": "subnet0cpri"
+        }
+      }
+    },
+
+    "rtba0apub": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0apub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0apub"
+        }
+      }
+    },
+    "rtba0bpub": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0bpub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0bpub"
+        }
+      }
+    },
+    "rtba0cpub": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0cpub"
+        },
+        "SubnetId": {
+          "Ref": "subnet0cpub"
+        }
+      }
+    },
+
+    "rt0apri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0apri"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "nategateway0a"
+        }
+      }
+    },
+    "rt0bpri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0bpri"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "nategateway0b"
+        }
+      }
+    },
+    "rt0cpri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0cpri"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "nategateway0c"
+        }
+      }
+    },
+
+    "rt1apri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0apri"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+    "rt1bpri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0bpri"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+    "rt1cpri": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0cpri"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+
+    "rt0apub": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0apub"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "ig00"
+        }
+      }
+    },
+    "rt0bpub": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0bpub"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "ig00"
+        }
+      }
+    },
+    "rt0cpub": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0cpub"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "ig00"
+        }
+      }
+    },
+
+    "rt1apub": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0apub"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+    "rt1bpub": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0bpub"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+    "rt1cpub": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPC"
+          ]
+        },
+        "RouteTableId": {
+          "Ref": "rtb0cpub"
+        },
+        "VpcPeeringConnectionId": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "NETWORK",
+            "USEAST1VPCPCID"
+          ]
+        }
+      }
+    },
+
+    "rdssubnetgroup00": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "rdsdb00 subnetgroup",
+        "SubnetIds": [
+          {
+            "Ref": "subnet0apri"
+          },
+          {
+            "Ref": "subnet0bpri"
+          },
+          {
+            "Ref": "subnet0cpri"
+          }
+        ]
+      }
+    },
+    "rdsdb00": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "VPCSecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "sg00pri",
+              "GroupId"
+            ]
+          }
+        ],
+        "AllocatedStorage": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "STORAGE"
+          ]
+        },
+        "AllowMajorVersionUpgrade": "false",
+        "AutoMinorVersionUpgrade": "false",
+        "BackupRetentionPeriod": 7,
+        "DBInstanceClass": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "TYPE"
+          ]
+        },
+        "DBInstanceIdentifier": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "DBNAME"
+          ]
+        },
+        "DBName": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "DBNAME"
+          ]
+        },
+        "DBParameterGroupName": "default.postgres9.6",
+        "DBSubnetGroupName": {
+          "Ref": "rdssubnetgroup00"
+        },
+        "Engine": "postgres",
+        "EngineVersion": "9.6.1",
+        "LicenseModel": "postgresql-license",
+        "MasterUsername": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "USER"
+          ]
+        },
+        "MasterUserPassword": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "RDS",
+            "PASSWORD"
+          ]
+        },
+        "MultiAZ": "true",
+        "OptionGroupName": "default:postgres-9-6",
+        "Port": "5432",
+        "PreferredBackupWindow": "12:00-13:00",
+        "PreferredMaintenanceWindow": "sun:10:00-sun:11:00",
+        "PubliclyAccessible": "false",
+        "StorageEncrypted": "false",
+        "StorageType": "standard",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "dcos-cloudmgr-db"
+          }
+        ]
+      }
+    },
+
+    "lc00mas": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 3,
+          "MinSuccessfulInstancesPercent": 100,
+          "PauseTime": "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      },
+      "Properties": {
+        "InstanceType": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "MASTER",
+            "TYPE"
+          ]
+        },
+        "KeyName": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "STACK",
+            "KEYNAME"
+          ]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg00mas"
+          },
+          {
+            "Ref": "sg02adm"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              ["foo", "bar"]
+            ]
+          }
+        },
+        "IamInstanceProfile": {
+          "Ref": "instanceprofile00mas"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "DeleteOnTermination": true,
+              "VolumeSize": {
+                "Fn::FindInMap": [
+                  "VARIABLES",
+                  "MASTER",
+                  "ROOTDISK"
+                ]
+              },
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "AssociatePublicIpAddress": "true",
+        "EbsOptimized": "true",
+        "ImageId": {
+          "Fn::FindInMap": [
+            "CENTOS7AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "AMI"
+          ]
+        }
+      }
+    },
+    "lc00pri": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 3,
+          "MinSuccessfulInstancesPercent": 100,
+          "PauseTime": "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      },
+      "Properties": {
+        "InstanceType": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PRIVATEAGENT",
+            "TYPE"
+          ]
+        },
+        "KeyName": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "STACK",
+            "KEYNAME"
+          ]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg00pri"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              ["foo", "bar"]
+            ]
+          }
+        },
+        "IamInstanceProfile": {
+          "Ref": "instanceprofile01agt"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "DeleteOnTermination": true,
+              "VolumeSize": {
+                "Fn::FindInMap": [
+                  "VARIABLES",
+                  "PRIVATEAGENT",
+                  "ROOTDISK"
+                ]
+              },
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "AssociatePublicIpAddress": "false",
+        "EbsOptimized": "true",
+        "ImageId": {
+          "Fn::FindInMap": [
+            "CENTOS7AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "AMI"
+          ]
+        }
+      }
+    },
+    "lc01pub": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MaxBatchSize": 1,
+          "MinInstancesInService": 1,
+          "MinSuccessfulInstancesPercent": 100,
+          "PauseTime": "PT15M",
+          "WaitOnResourceSignals": "true"
+        }
+      },
+      "Properties": {
+        "InstanceType": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PUBLICAGENT",
+            "TYPE"
+          ]
+        },
+        "KeyName": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "STACK",
+            "KEYNAME"
+          ]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "sg01pub"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              ["foo", "bar"]
+            ]
+          }
+        },
+        "IamInstanceProfile": {
+          "Ref": "instanceprofile01agt"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "DeleteOnTermination": true,
+              "VolumeSize": {
+                "Fn::FindInMap": [
+                  "VARIABLES",
+                  "PUBLICAGENT",
+                  "ROOTDISK"
+                ]
+              },
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "AssociatePublicIpAddress": "true",
+        "EbsOptimized": "true",
+        "ImageId": {
+          "Fn::FindInMap": [
+            "CENTOS7AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "AMI"
+          ]
+        }
+      }
+    },
+
+    "asg00mas": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Timeout": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "TIMEOUT",
+              "STACK"
+            ]
+          },
+          "Count": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "MASTER",
+              "COUNT"
+            ]
+          }
+        }
+      },
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "MinSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "MASTER",
+            "COUNT"
+          ]
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "elb00mas"
+          },
+          {
+            "Ref": "elb00int"
+          }
+        ],
+        "DesiredCapacity": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "MASTER",
+            "COUNT"
+          ]
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "lc00mas"
+        },
+        "MaxSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "MASTER",
+            "COUNT"
+          ]
+        },
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Key": "Role",
+            "Value": "dcos-master"
+          }
+        ]
+      }
+    },
+    "asg00pri": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Timeout": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "TIMEOUT",
+              "STACK"
+            ]
+          },
+          "Count": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "PRIVATEAGENT",
+              "COUNT"
+            ]
+          }
+        }
+      },
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "MinSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PRIVATEAGENT",
+            "COUNT"
+          ]
+        },
+        "DesiredCapacity": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PRIVATEAGENT",
+            "COUNT"
+          ]
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "subnet0apri"
+          },
+          {
+            "Ref": "subnet0bpri"
+          },
+          {
+            "Ref": "subnet0cpri"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "lc00pri"
+        },
+        "MaxSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PRIVATEAGENT",
+            "COUNT"
+          ]
+        },
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Key": "Role",
+            "Value": "dcos-private-agent"
+          }
+        ]
+      }
+    },
+    "asg01pub": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Timeout": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "TIMEOUT",
+              "STACK"
+            ]
+          },
+          "Count": {
+            "Fn::FindInMap": [
+              "VARIABLES",
+              "PUBLICAGENT",
+              "COUNT"
+            ]
+          }
+        }
+      },
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "MinSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PUBLICAGENT",
+            "COUNT"
+          ]
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "elb01pub"
+          },
+          {
+            "Ref": "elb01int"
+          }
+        ],
+        "DesiredCapacity": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PUBLICAGENT",
+            "COUNT"
+          ]
+        },
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "lc01pub"
+        },
+        "MaxSize": {
+          "Fn::FindInMap": [
+            "VARIABLES",
+            "PUBLICAGENT",
+            "COUNT"
+          ]
+        },
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Key": "Role",
+            "Value": "dcos-public-agent"
+          }
+        ]
+      }
+    },
+
+    "sg00mas": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "SecurityGroupIngress": [
+          {
+            "FromPort": "5050",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "5050"
+          },
+          {
+            "FromPort": "80",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "80"
+          },
+          {
+            "FromPort": "443",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "443"
+          },
+          {
+            "FromPort": "8080",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "8080"
+          },
+          {
+            "FromPort": "8181",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "8181"
+          },
+          {
+            "FromPort": "2181",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "2181"
+          },
+          {
+            "FromPort": "2379",
+            "IpProtocol": "tcp",
+            "SourceSecurityGroupId": {
+              "Ref": "sg03elb"
+            },
+            "ToPort": "2379"
+          }
+        ],
+        "GroupDescription": "Mesos Masters"
+      }
+    },
+    "sg00pri": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "GroupDescription": "Mesos Private Agents"
+      }
+    },
+    "sg01pub": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "GroupDescription": "Mesos Public Agents"
+      }
+    },
+    "sg02adm": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "SecurityGroupIngress": [
+          {
+            "FromPort": "22",
+            "IpProtocol": "tcp",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "VARIABLES",
+                "STACK",
+                "ADMINLOCATION"
+              ]
+            },
+            "ToPort": "22"
+          },
+          {
+            "FromPort": "80",
+            "IpProtocol": "tcp",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "VARIABLES",
+                "STACK",
+                "ADMINLOCATION"
+              ]
+            },
+            "ToPort": "80"
+          },
+          {
+            "FromPort": "443",
+            "IpProtocol": "tcp",
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "VARIABLES",
+                "STACK",
+                "ADMINLOCATION"
+              ]
+            },
+            "ToPort": "443"
+          }
+        ],
+        "GroupDescription": "Enable Access from Admin Zone"
+      }
+    },
+    "sg03elb": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc00"
+        },
+        "GroupDescription": "Mesos Master ELB"
+      }
+    },
+
+    "ingress00mas2mas": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00mas"
+        },
+        "GroupId": {
+          "Ref": "sg00mas"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress01pub2mas": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg01pub"
+        },
+        "GroupId": {
+          "Ref": "sg00mas"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress02pri2mas": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00pri"
+        },
+        "GroupId": {
+          "Ref": "sg00mas"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress03pri2elb": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "2181",
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00pri"
+        },
+        "GroupId": {
+          "Ref": "sg03elb"
+        },
+        "ToPort": "2181"
+      }
+    },
+    "ingress04pri2elb": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "2379",
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00pri"
+        },
+        "GroupId": {
+          "Ref": "sg03elb"
+        },
+        "ToPort": "2379"
+      }
+    },
+    "ingress04mas2pri": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00mas"
+        },
+        "GroupId": {
+          "Ref": "sg00pri"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress05pub2pri": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg01pub"
+        },
+        "GroupId": {
+          "Ref": "sg00pri"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress06pri2pri": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00pri"
+        },
+        "GroupId": {
+          "Ref": "sg00pri"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress07mas2pub": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00mas"
+        },
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress08pub2pub": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg01pub"
+        },
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress09pri2pub": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "FromPort": "0",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sg00pri"
+        },
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "65535"
+      }
+    },
+    "ingress10pub01": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "0",
+        "IpProtocol": "tcp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "21"
+      }
+    },
+    "ingress11pub02": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "23",
+        "IpProtocol": "tcp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "5050"
+      }
+    },
+    "ingress12pub03": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "5052",
+        "IpProtocol": "tcp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "32000"
+      }
+    },
+    "ingress13pub04": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "0",
+        "IpProtocol": "udp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "21"
+      }
+    },
+    "ingress14pub05": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "23",
+        "IpProtocol": "udp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "5050"
+      }
+    },
+    "ingress15pub06": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "CidrIp": "0.0.0.0/0",
+        "FromPort": "5052",
+        "IpProtocol": "udp",
+        "GroupId": {
+          "Ref": "sg01pub"
+        },
+        "ToPort": "32000"
+      }
+    },
+    "elb00mas": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "sg03elb"
+          },
+          {
+            "Ref": "sg02adm"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "443",
+            "Protocol": "SSL",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "80",
+            "SSLCertificateId": "arn:aws:acm:us-east-1:953558963498:certificate/098ad780-46be-47cc-bb9b-44e1679aced3"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "30",
+          "UnhealthyThreshold": "2",
+          "Timeout": "5",
+          "Target": "TCP:5050"
+        }
+      }
+    },
+    "elb00int": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "sg03elb"
+          },
+          {
+            "Ref": "sg02adm"
+          },
+          {
+            "Ref": "sg00pri"
+          },
+          {
+            "Ref": "sg01pub"
+          },
+          {
+            "Ref": "sg00mas"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "2379",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "InstancePort": "2379"
+          },
+          {
+            "LoadBalancerPort": "5050",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "InstancePort": "5050"
+          },
+          {
+            "LoadBalancerPort": "2181",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "2181"
+          },
+          {
+            "LoadBalancerPort": "8181",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "InstancePort": "8181"
+          },
+          {
+            "LoadBalancerPort": "80",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "80"
+          },
+          {
+            "LoadBalancerPort": "443",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "443"
+          },
+          {
+            "LoadBalancerPort": "8080",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "InstancePort": "8080"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "30",
+          "UnhealthyThreshold": "2",
+          "Timeout": "5",
+          "Target": "TCP:5050"
+        },
+        "Scheme": "internal"
+      }
+    },
+    "elb01int": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "sg03elb"
+          },
+          {
+            "Ref": "sg02adm"
+          },
+          {
+            "Ref": "sg00pri"
+          },
+          {
+            "Ref": "sg01pub"
+          },
+          {
+            "Ref": "sg00mas"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "80",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "80"
+          },
+          {
+            "LoadBalancerPort": "443",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "443"
+          },
+          {
+            "LoadBalancerPort": "8086",
+            "Protocol": "TCP",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "8086"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "30",
+          "UnhealthyThreshold": "2",
+          "Timeout": "5",
+          "Target": "TCP:80"
+        },
+        "Scheme": "internal"
+      }
+    },
+    "elb01pub": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": "vpcgwa00",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "subnet0apub"
+          },
+          {
+            "Ref": "subnet0bpub"
+          },
+          {
+            "Ref": "subnet0cpub"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "sg01pub"
+          }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "443",
+            "Protocol": "SSL",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "10080",
+            "SSLCertificateId": "arn:aws:acm:us-east-1:953558963498:certificate/098ad780-46be-47cc-bb9b-44e1679aced3"
+          },
+          {
+            "LoadBalancerPort": "4443",
+            "Protocol": "SSL",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "10084",
+            "SSLCertificateId": "arn:aws:acm:us-east-1:953558963498:certificate/098ad780-46be-47cc-bb9b-44e1679aced3"
+          },
+          {
+            "LoadBalancerPort": "5443",
+            "Protocol": "SSL",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "10085",
+            "SSLCertificateId": "arn:aws:acm:us-east-1:953558963498:certificate/098ad780-46be-47cc-bb9b-44e1679aced3"
+          },
+          {
+            "LoadBalancerPort": "8443",
+            "Protocol": "SSL",
+            "InstanceProtocol": "TCP",
+            "InstancePort": "10090",
+            "SSLCertificateId": "arn:aws:acm:us-east-1:953558963498:certificate/098ad780-46be-47cc-bb9b-44e1679aced3"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "5",
+          "UnhealthyThreshold": "2",
+          "Timeout": "2",
+          "Target": "HTTP:9090/_haproxy_health_check"
+        }
+      }
+    }
+  }
+}
