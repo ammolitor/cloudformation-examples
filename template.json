@@ -145,7 +145,7 @@
       "Description": "Public slaves",
       "Value": {
         "Fn::GetAtt": [
-          "elb01pub",
+          "elb_agent_public_external",
           "DNSName"
         ]
       }
@@ -160,7 +160,7 @@
       "Description": "Mesos Master",
       "Value": {
         "Fn::GetAtt": [
-          "elb00mas",
+          "elb_master_external",
           "DNSName"
         ]
       }
@@ -174,27 +174,27 @@
 
     "eip_a": {
       "Type": "AWS::EC2::EIP",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "Domain": "vpc"
       }
     },
     "eip_b": {
       "Type": "AWS::EC2::EIP",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "Domain": "vpc"
       }
     },
     "eip_c": {
       "Type": "AWS::EC2::EIP",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "Domain": "vpc"
       }
     },
 
-    "vpc00": {
+    "vpc": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "Tags": [
@@ -221,12 +221,12 @@
       }
     },
 
-    "subnet0apri": {
+    "subnet_private_a": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -256,12 +256,12 @@
         }
       }
     },
-    "subnet0bpri": {
+    "subnet_private_b": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -291,12 +291,12 @@
         }
       }
     },
-    "subnet0cpri": {
+    "subnet_private_c": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -327,12 +327,12 @@
       }
     },
 
-    "subnet0apub": {
+    "subnet_public_a": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -362,12 +362,12 @@
         }
       }
     },
-    "subnet0bpub": {
+    "subnet_public_b": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -397,12 +397,12 @@
         }
       }
     },
-    "subnet0cpub": {
+    "subnet_public_c": {
       "Type": "AWS::EC2::Subnet",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -433,7 +433,7 @@
       }
     },
 
-    "nategateway0a": {
+    "nat_gateway_a": {
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "AllocationId": {
@@ -443,11 +443,11 @@
           ]
         },
         "SubnetId": {
-          "Ref": "subnet0apub"
+          "Ref": "subnet_public_a"
         }
       }
     },
-    "nategateway0b": {
+    "nat_gateway_b": {
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "AllocationId": {
@@ -457,11 +457,11 @@
           ]
         },
         "SubnetId": {
-          "Ref": "subnet0bpub"
+          "Ref": "subnet_public_b"
         }
       }
     },
-    "nategateway0c": {
+    "nat_gateway_c": {
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "AllocationId": {
@@ -471,12 +471,12 @@
           ]
         },
         "SubnetId": {
-          "Ref": "subnet0cpub"
+          "Ref": "subnet_public_c"
         }
       }
     },
 
-    "efs00": {
+    "efs_fs": {
       "Type": "AWS::EFS::FileSystem",
       "Properties": {
         "FileSystemTags": [
@@ -488,56 +488,56 @@
         "PerformanceMode": "generalPurpose"
       }
     },
-    "efsmt0a": {
+    "efs_mounttarget_a": {
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": {
-          "Ref": "efs00"
+          "Ref": "efs_fs"
         },
         "SecurityGroups": [
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           }
         ],
         "SubnetId": {
-          "Ref": "subnet0apri"
+          "Ref": "subnet_private_a"
         }
       }
     },
-    "efsmt0b": {
+    "efs_mounttarget_b": {
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": {
-          "Ref": "efs00"
+          "Ref": "efs_fs"
         },
         "SecurityGroups": [
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           }
         ],
         "SubnetId": {
-          "Ref": "subnet0bpri"
+          "Ref": "subnet_private_b"
         }
       }
     },
-    "efsmt0c": {
+    "efs_mounttarget_c": {
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": {
-          "Ref": "efs00"
+          "Ref": "efs_fs"
         },
         "SecurityGroups": [
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           }
         ],
         "SubnetId": {
-          "Ref": "subnet0cpri"
+          "Ref": "subnet_private_c"
         }
       }
     },
 
-    "role00mas": {
+    "iam_role_master": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "Path": "/",
@@ -646,7 +646,7 @@
         }
       }
     },
-    "role01agt": {
+    "iam_role_agent": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "Policies": [
@@ -752,32 +752,32 @@
       }
     },
 
-    "instanceprofile00mas": {
+    "iam_instanceprofile_master": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
         "Path": "/",
         "Roles": [
           {
-            "Ref": "role00mas"
+            "Ref": "iam_role_master"
           }
         ]
       }
     },
-    "instanceprofile01agt": {
+    "iam_instanceprofile_agent": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
         "Path": "/",
         "Roles": [
           {
-            "Ref": "role01agt"
+            "Ref": "iam_role_agent"
           }
         ]
       }
     },
 
-    "ig00": {
+    "internet_gateway": {
       "Type": "AWS::EC2::InternetGateway",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "Tags": [
           {
@@ -793,20 +793,20 @@
         ]
       }
     },
-    "vpcgwa00": {
+    "vpc_gateway_attachment": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
-      "DependsOn": "ig00",
+      "DependsOn": "internet_gateway",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "InternetGatewayId": {
-          "Ref": "ig00"
+          "Ref": "internet_gateway"
         }
       }
     },
 
-    "dopt00": {
+    "dhcp_options": {
       "Type": "AWS::EC2::DHCPOptions",
       "Properties": {
         "DomainNameServers": [
@@ -823,24 +823,24 @@
         }
       }
     },
-    "doptassoc00": {
+    "vpc_dhcp_options_association": {
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
-      "DependsOn": "vpc00",
+      "DependsOn": "vpc",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "DhcpOptionsId": {
-          "Ref": "dopt00"
+          "Ref": "dhcp_options"
         }
       }
     },
 
-    "acl00pri": {
+    "network_acl_private": {
       "Type": "AWS::EC2::NetworkAcl",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -856,11 +856,11 @@
         ]
       }
     },
-    "acl01pub": {
+    "network_acl_public": {
       "Type": "AWS::EC2::NetworkAcl",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -877,7 +877,7 @@
       }
     },
 
-    "acle00priout": {
+    "network_acl_entry_private_egress": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "PortRange": {
@@ -887,14 +887,14 @@
         "RuleNumber": "100",
         "RuleAction": "allow",
         "NetworkAclId": {
-          "Ref": "acl00pri"
+          "Ref": "network_acl_private"
         },
         "Protocol": "-1",
         "Egress": "true",
         "CidrBlock": "0.0.0.0/0"
       }
     },
-    "acle00priin": {
+    "network_acl_entry_private_ingress": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "PortRange": {
@@ -904,7 +904,7 @@
         "RuleNumber": "100",
         "RuleAction": "allow",
         "NetworkAclId": {
-          "Ref": "acl00pri"
+          "Ref": "network_acl_private"
         },
         "Protocol": "-1",
         "Egress": "false",
@@ -912,7 +912,7 @@
       }
     },
 
-    "acle01pubout": {
+    "network_acl_entry_public_egress": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "PortRange": {
@@ -922,14 +922,14 @@
         "RuleNumber": "100",
         "RuleAction": "allow",
         "NetworkAclId": {
-          "Ref": "acl01pub"
+          "Ref": "network_acl_public"
         },
         "Protocol": "-1",
         "Egress": "true",
         "CidrBlock": "0.0.0.0/0"
       }
     },
-    "acle01pubin": {
+    "network_acl_entry_public_ingress": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "PortRange": {
@@ -939,7 +939,7 @@
         "RuleNumber": "100",
         "RuleAction": "allow",
         "NetworkAclId": {
-          "Ref": "acl01pub"
+          "Ref": "network_acl_public"
         },
         "Protocol": "-1",
         "Egress": "false",
@@ -947,141 +947,79 @@
       }
     },
 
-    "subnetacl0apri": {
+    "subnet_network_acl_association_private_a": {
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "acl00pri"
+          "Ref": "network_acl_private"
         },
         "SubnetId": {
-          "Ref": "subnet0apri"
+          "Ref": "subnet_private_a"
         }
       }
     },
-    "subnetacl0bpri": {
+    "subnet_network_acl_association_private_b": {
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "acl00pri"
+          "Ref": "network_acl_private"
         },
         "SubnetId": {
-          "Ref": "subnet0bpri"
+          "Ref": "subnet_private_b"
         }
       }
     },
-    "subnetacl0cpri": {
+    "subnet_network_acl_association_private_c": {
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "acl00pri"
+          "Ref": "network_acl_private"
         },
         "SubnetId": {
-          "Ref": "subnet0cpri"
-        }
-      }
-    },
-
-    "subnetacl0apub": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "acl01pub"
-        },
-        "SubnetId": {
-          "Ref": "subnet0apub"
-        }
-      }
-    },
-    "subnetacl0bpub": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "acl01pub"
-        },
-        "SubnetId": {
-          "Ref": "subnet0bpub"
-        }
-      }
-    },
-    "subnetacl0cpub": {
-      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
-      "Properties": {
-        "NetworkAclId": {
-          "Ref": "acl01pub"
-        },
-        "SubnetId": {
-          "Ref": "subnet0cpub"
+          "Ref": "subnet_private_c"
         }
       }
     },
 
-    "rtb0apri": {
-      "Type": "AWS::EC2::RouteTable",
+    "subnet_network_acl_association_public_a": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
-        "VpcId": {
-          "Ref": "vpc00"
+        "NetworkAclId": {
+          "Ref": "network_acl_public"
         },
-        "Tags": [
-          {
-            "Value": {
-              "Ref": "AWS::StackName"
-            },
-            "Key": "Application"
-          },
-          {
-            "Value": "Public",
-            "Key": "Network"
-          }
-        ]
+        "SubnetId": {
+          "Ref": "subnet_public_a"
+        }
       }
     },
-    "rtb0bpri": {
-      "Type": "AWS::EC2::RouteTable",
+    "subnet_network_acl_association_public_b": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
-        "VpcId": {
-          "Ref": "vpc00"
+        "NetworkAclId": {
+          "Ref": "network_acl_public"
         },
-        "Tags": [
-          {
-            "Value": {
-              "Ref": "AWS::StackName"
-            },
-            "Key": "Application"
-          },
-          {
-            "Value": "Public",
-            "Key": "Network"
-          }
-        ]
+        "SubnetId": {
+          "Ref": "subnet_public_b"
+        }
       }
     },
-    "rtb0cpri": {
-      "Type": "AWS::EC2::RouteTable",
+    "subnet_network_acl_association_public_c": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
-        "VpcId": {
-          "Ref": "vpc00"
+        "NetworkAclId": {
+          "Ref": "network_acl_public"
         },
-        "Tags": [
-          {
-            "Value": {
-              "Ref": "AWS::StackName"
-            },
-            "Key": "Application"
-          },
-          {
-            "Value": "Public",
-            "Key": "Network"
-          }
-        ]
+        "SubnetId": {
+          "Ref": "subnet_public_c"
+        }
       }
     },
 
-    "rtb0apub": {
+    "route_table_private_a": {
       "Type": "AWS::EC2::RouteTable",
-      "DependsOn": "vpc00",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -1097,12 +1035,11 @@
         ]
       }
     },
-    "rtb0bpub": {
+    "route_table_private_b": {
       "Type": "AWS::EC2::RouteTable",
-      "DependsOn": "vpc00",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -1118,12 +1055,11 @@
         ]
       }
     },
-    "rtb0cpub": {
+    "route_table_private_c": {
       "Type": "AWS::EC2::RouteTable",
-      "DependsOn": "vpc00",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "Tags": [
           {
@@ -1140,112 +1076,176 @@
       }
     },
 
-    "rtba0apri": {
+    "route_table_public_a": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "route_table_public_b": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+    "route_table_public_c": {
+      "Type": "AWS::EC2::RouteTable",
+      "DependsOn": "vpc",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc"
+        },
+        "Tags": [
+          {
+            "Value": {
+              "Ref": "AWS::StackName"
+            },
+            "Key": "Application"
+          },
+          {
+            "Value": "Public",
+            "Key": "Network"
+          }
+        ]
+      }
+    },
+
+    "subnet_route_table_association_private_a": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0apri"
+          "Ref": "route_table_private_a"
         },
         "SubnetId": {
-          "Ref": "subnet0apri"
+          "Ref": "subnet_private_a"
         }
       }
     },
-    "rtba0bpri": {
+    "subnet_route_table_association_private_b": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0bpri"
+          "Ref": "route_table_private_b"
         },
         "SubnetId": {
-          "Ref": "subnet0bpri"
+          "Ref": "subnet_private_b"
         }
       }
     },
-    "rtba0cpri": {
+    "subnet_route_table_association_private_c": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0cpri"
+          "Ref": "route_table_private_c"
         },
         "SubnetId": {
-          "Ref": "subnet0cpri"
+          "Ref": "subnet_private_c"
         }
       }
     },
 
-    "rtba0apub": {
+    "subnet_route_table_association_public_a": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0apub"
+          "Ref": "route_table_public_a"
         },
         "SubnetId": {
-          "Ref": "subnet0apub"
+          "Ref": "subnet_public_a"
         }
       }
     },
-    "rtba0bpub": {
+    "subnet_route_table_association_public_b": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0bpub"
+          "Ref": "route_table_public_b"
         },
         "SubnetId": {
-          "Ref": "subnet0bpub"
+          "Ref": "subnet_public_b"
         }
       }
     },
-    "rtba0cpub": {
+    "subnet_route_table_association_public_c": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0cpub"
+          "Ref": "route_table_public_c"
         },
         "SubnetId": {
-          "Ref": "subnet0cpub"
+          "Ref": "subnet_public_c"
         }
       }
     },
 
-    "rt0apri": {
+    "route_private_a0": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0apri"
+          "Ref": "route_table_private_a"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "NatGatewayId": {
-          "Ref": "nategateway0a"
+          "Ref": "nat_gateway_a"
         }
       }
     },
-    "rt0bpri": {
+    "route_private_b0": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0bpri"
+          "Ref": "route_table_private_b"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "NatGatewayId": {
-          "Ref": "nategateway0b"
+          "Ref": "nat_gateway_b"
         }
       }
     },
-    "rt0cpri": {
+    "route_private_c0": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0cpri"
+          "Ref": "route_table_private_c"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "NatGatewayId": {
-          "Ref": "nategateway0c"
+          "Ref": "nat_gateway_c"
         }
       }
     },
 
-    "rt1apri": {
+    "route_private_a1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1256,7 +1256,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0apri"
+          "Ref": "route_table_private_a"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1267,7 +1267,7 @@
         }
       }
     },
-    "rt1bpri": {
+    "route_private_b1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1278,7 +1278,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0bpri"
+          "Ref": "route_table_private_b"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1289,7 +1289,7 @@
         }
       }
     },
-    "rt1cpri": {
+    "route_private_c1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1300,7 +1300,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0cpri"
+          "Ref": "route_table_private_c"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1312,47 +1312,47 @@
       }
     },
 
-    "rt0apub": {
+    "route_public_a0": {
       "Type": "AWS::EC2::Route",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0apub"
+          "Ref": "route_table_public_a"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "GatewayId": {
-          "Ref": "ig00"
+          "Ref": "internet_gateway"
         }
       }
     },
-    "rt0bpub": {
+    "route_public_b0": {
       "Type": "AWS::EC2::Route",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0bpub"
+          "Ref": "route_table_public_b"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "GatewayId": {
-          "Ref": "ig00"
+          "Ref": "internet_gateway"
         }
       }
     },
-    "rt0cpub": {
+    "route_public_c0": {
       "Type": "AWS::EC2::Route",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0cpub"
+          "Ref": "route_table_public_c"
         },
         "DestinationCidrBlock": "0.0.0.0/0",
         "GatewayId": {
-          "Ref": "ig00"
+          "Ref": "internet_gateway"
         }
       }
     },
 
-    "rt1apub": {
+    "route_public_a1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1363,7 +1363,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0apub"
+          "Ref": "route_table_public_a"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1374,7 +1374,7 @@
         }
       }
     },
-    "rt1bpub": {
+    "route_public_b1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1385,7 +1385,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0bpub"
+          "Ref": "route_table_public_b"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1396,7 +1396,7 @@
         }
       }
     },
-    "rt1cpub": {
+    "route_public_c1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": {
@@ -1407,7 +1407,7 @@
           ]
         },
         "RouteTableId": {
-          "Ref": "rtb0cpub"
+          "Ref": "route_table_public_c"
         },
         "VpcPeeringConnectionId": {
           "Fn::FindInMap": [
@@ -1419,30 +1419,30 @@
       }
     },
 
-    "rdssubnetgroup00": {
+    "rds_subnet_group_0": {
       "Type": "AWS::RDS::DBSubnetGroup",
       "Properties": {
-        "DBSubnetGroupDescription": "rdsdb00 subnetgroup",
+        "DBSubnetGroupDescription": "rds_db_instance_0 subnetgroup",
         "SubnetIds": [
           {
-            "Ref": "subnet0apri"
+            "Ref": "subnet_private_a"
           },
           {
-            "Ref": "subnet0bpri"
+            "Ref": "subnet_private_b"
           },
           {
-            "Ref": "subnet0cpri"
+            "Ref": "subnet_private_c"
           }
         ]
       }
     },
-    "rdsdb00": {
+    "rds_db_instance_0": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
         "VPCSecurityGroups": [
           {
             "Fn::GetAtt": [
-              "sg00pri",
+              "security_group_agent_private",
               "GroupId"
             ]
           }
@@ -1480,7 +1480,7 @@
         },
         "DBParameterGroupName": "default.postgres9.6",
         "DBSubnetGroupName": {
-          "Ref": "rdssubnetgroup00"
+          "Ref": "rds_subnet_group_0"
         },
         "Engine": "postgres",
         "EngineVersion": "9.6.1",
@@ -1516,7 +1516,7 @@
       }
     },
 
-    "lc00mas": {
+    "launch_configuration_master": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
@@ -1544,10 +1544,10 @@
         },
         "SecurityGroups": [
           {
-            "Ref": "sg00mas"
+            "Ref": "security_group_master"
           },
           {
-            "Ref": "sg02adm"
+            "Ref": "security_group_agent_adminzone"
           }
         ],
         "UserData": {
@@ -1559,7 +1559,7 @@
           }
         },
         "IamInstanceProfile": {
-          "Ref": "instanceprofile00mas"
+          "Ref": "iam_instanceprofile_master"
         },
         "BlockDeviceMappings": [
           {
@@ -1590,7 +1590,7 @@
         }
       }
     },
-    "lc00pri": {
+    "launch_configuration_agent_private": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
@@ -1618,7 +1618,7 @@
         },
         "SecurityGroups": [
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           }
         ],
         "UserData": {
@@ -1630,7 +1630,7 @@
           }
         },
         "IamInstanceProfile": {
-          "Ref": "instanceprofile01agt"
+          "Ref": "iam_instanceprofile_agent"
         },
         "BlockDeviceMappings": [
           {
@@ -1661,7 +1661,7 @@
         }
       }
     },
-    "lc01pub": {
+    "launch_configuration_agent_public": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
@@ -1689,7 +1689,7 @@
         },
         "SecurityGroups": [
           {
-            "Ref": "sg01pub"
+            "Ref": "security_group_agent_public"
           }
         ],
         "UserData": {
@@ -1701,7 +1701,7 @@
           }
         },
         "IamInstanceProfile": {
-          "Ref": "instanceprofile01agt"
+          "Ref": "iam_instanceprofile_agent"
         },
         "BlockDeviceMappings": [
           {
@@ -1733,7 +1733,7 @@
       }
     },
 
-    "asg00mas": {
+    "autoscaling_group_master": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "CreationPolicy": {
         "ResourceSignal": {
@@ -1753,7 +1753,7 @@
           }
         }
       },
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "MinSize": {
           "Fn::FindInMap": [
@@ -1764,10 +1764,10 @@
         },
         "LoadBalancerNames": [
           {
-            "Ref": "elb00mas"
+            "Ref": "elb_master_external"
           },
           {
-            "Ref": "elb00int"
+            "Ref": "elb_master_internal"
           }
         ],
         "DesiredCapacity": {
@@ -1779,17 +1779,17 @@
         },
         "VPCZoneIdentifier": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "LaunchConfigurationName": {
-          "Ref": "lc00mas"
+          "Ref": "launch_configuration_master"
         },
         "MaxSize": {
           "Fn::FindInMap": [
@@ -1807,7 +1807,7 @@
         ]
       }
     },
-    "asg00pri": {
+    "autoscaling_group_agent_private": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "CreationPolicy": {
         "ResourceSignal": {
@@ -1827,7 +1827,7 @@
           }
         }
       },
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "MinSize": {
           "Fn::FindInMap": [
@@ -1845,17 +1845,17 @@
         },
         "VPCZoneIdentifier": [
           {
-            "Ref": "subnet0apri"
+            "Ref": "subnet_private_a"
           },
           {
-            "Ref": "subnet0bpri"
+            "Ref": "subnet_private_b"
           },
           {
-            "Ref": "subnet0cpri"
+            "Ref": "subnet_private_c"
           }
         ],
         "LaunchConfigurationName": {
-          "Ref": "lc00pri"
+          "Ref": "launch_configuration_agent_private"
         },
         "MaxSize": {
           "Fn::FindInMap": [
@@ -1873,7 +1873,7 @@
         ]
       }
     },
-    "asg01pub": {
+    "autoscaling_group_agent_public": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "CreationPolicy": {
         "ResourceSignal": {
@@ -1893,7 +1893,7 @@
           }
         }
       },
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "MinSize": {
           "Fn::FindInMap": [
@@ -1904,10 +1904,10 @@
         },
         "LoadBalancerNames": [
           {
-            "Ref": "elb01pub"
+            "Ref": "elb_agent_public_external"
           },
           {
-            "Ref": "elb01int"
+            "Ref": "elb_agent_public_internal"
           }
         ],
         "DesiredCapacity": {
@@ -1919,17 +1919,17 @@
         },
         "VPCZoneIdentifier": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "LaunchConfigurationName": {
-          "Ref": "lc01pub"
+          "Ref": "launch_configuration_agent_public"
         },
         "MaxSize": {
           "Fn::FindInMap": [
@@ -1948,18 +1948,18 @@
       }
     },
 
-    "sg00mas": {
+    "security_group_master": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "SecurityGroupIngress": [
           {
             "FromPort": "5050",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "5050"
           },
@@ -1967,7 +1967,7 @@
             "FromPort": "80",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "80"
           },
@@ -1975,7 +1975,7 @@
             "FromPort": "443",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "443"
           },
@@ -1983,7 +1983,7 @@
             "FromPort": "8080",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "8080"
           },
@@ -1991,7 +1991,7 @@
             "FromPort": "8181",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "8181"
           },
@@ -1999,7 +1999,7 @@
             "FromPort": "2181",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "2181"
           },
@@ -2007,7 +2007,7 @@
             "FromPort": "2379",
             "IpProtocol": "tcp",
             "SourceSecurityGroupId": {
-              "Ref": "sg03elb"
+              "Ref": "security_group_elb"
             },
             "ToPort": "2379"
           }
@@ -2015,29 +2015,29 @@
         "GroupDescription": "Mesos Masters"
       }
     },
-    "sg00pri": {
+    "security_group_agent_private": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "GroupDescription": "Mesos Private Agents"
       }
     },
-    "sg01pub": {
+    "security_group_agent_public": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "GroupDescription": "Mesos Public Agents"
       }
     },
-    "sg02adm": {
+    "security_group_agent_adminzone": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "SecurityGroupIngress": [
           {
@@ -2080,11 +2080,11 @@
         "GroupDescription": "Enable Access from Admin Zone"
       }
     },
-    "sg03elb": {
+    "security_group_elb": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc00"
+          "Ref": "vpc"
         },
         "GroupDescription": "Mesos Master ELB"
       }
@@ -2096,10 +2096,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "GroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "ToPort": "65535"
       }
@@ -2110,10 +2110,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "GroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "ToPort": "65535"
       }
@@ -2124,10 +2124,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "GroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "ToPort": "65535"
       }
@@ -2138,10 +2138,10 @@
         "FromPort": "2181",
         "IpProtocol": "tcp",
         "SourceSecurityGroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "GroupId": {
-          "Ref": "sg03elb"
+          "Ref": "security_group_elb"
         },
         "ToPort": "2181"
       }
@@ -2152,10 +2152,10 @@
         "FromPort": "2379",
         "IpProtocol": "tcp",
         "SourceSecurityGroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "GroupId": {
-          "Ref": "sg03elb"
+          "Ref": "security_group_elb"
         },
         "ToPort": "2379"
       }
@@ -2166,10 +2166,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "GroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "ToPort": "65535"
       }
@@ -2180,10 +2180,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "GroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "ToPort": "65535"
       }
@@ -2194,10 +2194,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "GroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "ToPort": "65535"
       }
@@ -2208,10 +2208,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00mas"
+          "Ref": "security_group_master"
         },
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "65535"
       }
@@ -2222,10 +2222,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "65535"
       }
@@ -2236,10 +2236,10 @@
         "FromPort": "0",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sg00pri"
+          "Ref": "security_group_agent_private"
         },
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "65535"
       }
@@ -2251,7 +2251,7 @@
         "FromPort": "0",
         "IpProtocol": "tcp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "21"
       }
@@ -2263,7 +2263,7 @@
         "FromPort": "23",
         "IpProtocol": "tcp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "5050"
       }
@@ -2275,7 +2275,7 @@
         "FromPort": "5052",
         "IpProtocol": "tcp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "32000"
       }
@@ -2287,7 +2287,7 @@
         "FromPort": "0",
         "IpProtocol": "udp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "21"
       }
@@ -2299,7 +2299,7 @@
         "FromPort": "23",
         "IpProtocol": "udp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "5050"
       }
@@ -2311,32 +2311,33 @@
         "FromPort": "5052",
         "IpProtocol": "udp",
         "GroupId": {
-          "Ref": "sg01pub"
+          "Ref": "security_group_agent_public"
         },
         "ToPort": "32000"
       }
     },
-    "elb00mas": {
+
+    "elb_master_external": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "Subnets": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "SecurityGroups": [
           {
-            "Ref": "sg03elb"
+            "Ref": "security_group_elb"
           },
           {
-            "Ref": "sg02adm"
+            "Ref": "security_group_agent_adminzone"
           }
         ],
         "Listeners": [
@@ -2357,35 +2358,35 @@
         }
       }
     },
-    "elb00int": {
+    "elb_master_internal": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties": {
         "Subnets": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "SecurityGroups": [
           {
-            "Ref": "sg03elb"
+            "Ref": "security_group_elb"
           },
           {
-            "Ref": "sg02adm"
+            "Ref": "security_group_agent_adminzone"
           },
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           },
           {
-            "Ref": "sg01pub"
+            "Ref": "security_group_agent_public"
           },
           {
-            "Ref": "sg00mas"
+            "Ref": "security_group_master"
           }
         ],
         "Listeners": [
@@ -2442,35 +2443,35 @@
         "Scheme": "internal"
       }
     },
-    "elb01int": {
+    "elb_agent_public_internal": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties": {
         "Subnets": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "SecurityGroups": [
           {
-            "Ref": "sg03elb"
+            "Ref": "security_group_elb"
           },
           {
-            "Ref": "sg02adm"
+            "Ref": "security_group_agent_adminzone"
           },
           {
-            "Ref": "sg00pri"
+            "Ref": "security_group_agent_private"
           },
           {
-            "Ref": "sg01pub"
+            "Ref": "security_group_agent_public"
           },
           {
-            "Ref": "sg00mas"
+            "Ref": "security_group_master"
           }
         ],
         "Listeners": [
@@ -2503,24 +2504,24 @@
         "Scheme": "internal"
       }
     },
-    "elb01pub": {
+    "elb_agent_public_external": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "DependsOn": "vpcgwa00",
+      "DependsOn": "vpc_gateway_attachment",
       "Properties": {
         "Subnets": [
           {
-            "Ref": "subnet0apub"
+            "Ref": "subnet_public_a"
           },
           {
-            "Ref": "subnet0bpub"
+            "Ref": "subnet_public_b"
           },
           {
-            "Ref": "subnet0cpub"
+            "Ref": "subnet_public_c"
           }
         ],
         "SecurityGroups": [
           {
-            "Ref": "sg01pub"
+            "Ref": "security_group_agent_public"
           }
         ],
         "Listeners": [
